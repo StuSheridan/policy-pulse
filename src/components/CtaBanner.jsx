@@ -1,16 +1,11 @@
+import { ArrowRight } from 'lucide-react'
+
 export default function CtaBanner() {
   return (
-    <div
-      className="text-center mt-8 mb-8"
-      style={{
-        background: '#3B82F6',
-        borderRadius: '8px',
-        padding: '24px'
-      }}
-    >
+    <div className="bg-blue-500 text-white rounded-xl p-6 text-center mt-8 mb-8">
       <p
-        className="text-white mb-4"
-        style={{ fontFamily: 'Open Sans, sans-serif', fontSize: '16px' }}
+        className="text-white mb-4 text-base"
+        style={{ fontFamily: 'Open Sans, sans-serif' }}
       >
         Audit your own content for less than a coffee a day at Checkedit.ai
       </p>
@@ -18,14 +13,10 @@ export default function CtaBanner() {
         href="https://checkedit.ai"
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-block px-6 py-2 rounded-lg font-semibold text-sm transition-all hover:opacity-90"
-        style={{
-          background: 'white',
-          color: '#3B82F6',
-          fontFamily: 'Montserrat, sans-serif'
-        }}
+        className="inline-flex items-center gap-2 bg-white text-blue-500 px-6 py-2 rounded-lg font-medium text-sm transition-all hover:opacity-90"
+        style={{ fontFamily: 'Montserrat, sans-serif' }}
       >
-        Try Checkedit →
+        Try Checkedit <ArrowRight className="w-4 h-4" />
       </a>
     </div>
   )

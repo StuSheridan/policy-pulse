@@ -1,19 +1,11 @@
+import { ExternalLink } from 'lucide-react'
+
 export default function SectionCard({ headline, summary, action, source, url, sector_tags }) {
   return (
-    <div
-      className="mb-4 p-4"
-      style={{
-        background: 'white',
-        border: '1px solid #E5E7EB',
-        borderRadius: '8px'
-      }}
-    >
+    <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 mb-4">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
         {source && (
-          <span
-            className="inline-block px-2 py-0.5 rounded-full"
-            style={{ background: '#F3F4F5', color: '#6B7280', fontSize: '11px', fontFamily: 'Roboto, sans-serif' }}
-          >
+          <span className="bg-gray-100 text-gray-500 text-xs rounded-full px-2 py-0.5">
             {source}
           </span>
         )}
@@ -21,8 +13,7 @@ export default function SectionCard({ headline, summary, action, source, url, se
           {sector_tags?.map((tag) => (
             <span
               key={tag}
-              className="inline-block px-2 py-0.5 rounded-full"
-              style={{ background: '#EFF6FF', color: '#3B82F6', fontSize: '11px', fontFamily: 'Roboto, sans-serif' }}
+              className="bg-blue-50 text-blue-500 text-xs rounded-full px-2 py-0.5"
             >
               {tag?.replace(/_/g, ' ')}
             </span>
@@ -31,29 +22,23 @@ export default function SectionCard({ headline, summary, action, source, url, se
       </div>
 
       <h3
-        className="font-bold mb-1"
-        style={{ fontSize: '15px', color: '#1F2937', fontFamily: 'Montserrat, sans-serif' }}
+        className="font-bold text-gray-800 mb-1"
+        style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '15px' }}
       >
         {headline}
       </h3>
 
       <p
-        className="mb-3"
-        style={{ fontSize: '13px', color: '#4B5563', fontFamily: 'Open Sans, sans-serif' }}
+        className="text-base text-gray-600 mb-3"
+        style={{ fontFamily: 'Open Sans, sans-serif', fontSize: '14px' }}
       >
         {summary}
       </p>
 
       {action && (
         <div
-          className="mb-3"
-          style={{
-            borderLeft: '3px solid #3B82F6',
-            paddingLeft: '10px',
-            fontSize: '13px',
-            color: '#374151',
-            fontFamily: 'Open Sans, sans-serif'
-          }}
+          className="border-l-4 border-blue-500 pl-3 mb-3 text-sm text-gray-700"
+          style={{ fontFamily: 'Open Sans, sans-serif' }}
         >
           <strong>What to do:</strong> {action}
         </div>
@@ -65,10 +50,9 @@ export default function SectionCard({ headline, summary, action, source, url, se
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs hover:underline"
-            style={{ color: '#3B82F6' }}
+            className="inline-flex items-center gap-1 text-xs text-blue-500 hover:underline"
           >
-            View source →
+            View source <ExternalLink className="w-3 h-3" />
           </a>
         </div>
       )}

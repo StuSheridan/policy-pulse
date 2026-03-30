@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
+import { AlertCircle, Info } from 'lucide-react'
 import Header from './components/Header'
 import GenerateButton from './components/GenerateButton'
 import IssuePreview from './components/IssuePreview'
@@ -57,8 +58,8 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen pb-12" style={{ background: '#F1F4F6' }}>
-      <div className="mx-auto px-4" style={{ maxWidth: '680px' }}>
+    <div className="min-h-screen bg-gray-100 pb-12">
+      <div className="max-w-3xl mx-auto px-4">
         <Header weekNumber={getCurrentWeekNumber()} />
         <GenerateButton
           loading={loading}
@@ -67,15 +68,14 @@ export default function App() {
         />
 
         {error && (
-          <div
-            className="mx-auto mb-6 p-4 rounded-lg text-center"
-            style={{ maxWidth: '680px', background: '#FEE2E2', color: '#991B1B', borderRadius: '8px' }}
-          >
-            <p className="text-sm font-medium">{error}</p>
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-center">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <AlertCircle className="w-4 h-4 text-red-600" />
+              <p className="text-sm font-medium text-red-800">{error}</p>
+            </div>
             <button
               onClick={handleGenerate}
-              className="mt-2 text-sm underline"
-              style={{ color: '#3B82F6' }}
+              className="mt-2 text-sm underline text-blue-500"
             >
               Retry
             </button>
@@ -83,7 +83,7 @@ export default function App() {
         )}
 
         {loading && (
-          <div className="mx-auto" style={{ maxWidth: '680px' }}>
+          <div>
             <LoadingSection />
             <LoadingSection />
             <LoadingSection />
@@ -91,11 +91,11 @@ export default function App() {
         )}
 
         {issueData?.meta?.capped && (
-          <div
-            className="mx-auto mb-4 p-3 rounded-lg text-center"
-            style={{ maxWidth: '680px', background: '#DBEAFE', color: '#1E40AF', borderRadius: '8px', fontSize: '13px' }}
-          >
-            Some content was capped to protect API usage. All available content is shown below.
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-center flex items-center justify-center gap-2">
+            <Info className="w-4 h-4 text-blue-600" />
+            <span className="text-sm text-blue-800" style={{ fontFamily: 'Open Sans, sans-serif' }}>
+              Some content was capped to protect API usage. All available content is shown below.
+            </span>
           </div>
         )}
 

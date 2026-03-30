@@ -1,17 +1,16 @@
+import { Lightbulb, Search, ShieldCheck, FileText, TrendingUp } from 'lucide-react'
 import SectionCard from './SectionCard'
 import CtaBanner from './CtaBanner'
 
-function SectionHeading({ children }) {
+const SECTION_CAP = 5
+
+function SectionHeading({ icon: Icon, children }) {
   return (
     <h2
-      className="mt-8 mb-4 pb-2"
-      style={{
-        fontFamily: 'Montserrat, sans-serif',
-        fontSize: '16px',
-        color: '#374151',
-        borderBottom: '2px solid #E5E7EB'
-      }}
+      className="flex items-center gap-2 mt-8 mb-4 pb-2 text-xl font-bold text-gray-700 border-b-2 border-gray-200"
+      style={{ fontFamily: 'Montserrat, sans-serif' }}
     >
+      {Icon && <Icon className="w-5 h-5 text-blue-500" />}
       {children}
     </h2>
   )
@@ -19,9 +18,35 @@ function SectionHeading({ children }) {
 
 function EmptySection() {
   return (
-    <p className="text-sm italic mb-4" style={{ color: '#9CA3AF' }}>
+    <p className="text-sm italic text-gray-400 mb-4" style={{ fontFamily: 'Open Sans, sans-serif' }}>
       Nothing to report this week — check back next issue.
     </p>
+  )
+}
+
+function CappedItems({ items }) {
+  if (!items?.length) return <EmptySection />
+  const visible = items.slice(0, SECTION_CAP)
+  const remaining = items.length - SECTION_CAP
+  return (
+    <>
+      {visible.map((item, i) => (
+        <SectionCard
+          key={i}
+          headline={item?.headline}
+          summary={item?.summary}
+          action={item?.action}
+          source={item?.source}
+          url={item?.original_url}
+          sector_tags={item?.sector_tags}
+        />
+      ))}
+      {remaining > 0 && (
+        <p className="text-sm text-gray-500 mb-4 text-center" style={{ fontFamily: 'Open Sans, sans-serif' }}>
+          {remaining} more item{remaining !== 1 ? 's' : ''} available
+        </p>
+      )}
+    </>
   )
 }
 
@@ -29,85 +54,37 @@ export default function IssuePreview({ issueData }) {
   const s = issueData?.sections
 
   return (
-    <div className="mx-auto px-4" style={{ maxWidth: '680px' }}>
+    <div className="max-w-3xl mx-auto px-4">
       {/* Editor's overview placeholder */}
-      <div
-        className="rounded-lg p-4 mb-6 text-center"
-        style={{ background: '#E5E7EB', borderRadius: '8px' }}
-      >
-        <p className="text-sm" style={{ color: '#6B7280' }}>
+      <div className="bg-gray-200 rounded-lg p-4 mb-6 text-center">
+        <p className="text-sm text-gray-500" style={{ fontFamily: 'Open Sans, sans-serif' }}>
           This week's overview will appear here after your review.
         </p>
       </div>
 
       {/* Regulatory Updates */}
-      <SectionHeading>Regulatory Updates</SectionHeading>
-      {s?.regulatory_updates?.length > 0 ? (
-        s.regulatory_updates.map((item, i) => (
-          <SectionCard
-            key={i}
-            headline={item?.headline}
-            summary={item?.summary}
-            action={item?.action}
-            source={item?.source}
-            url={item?.original_url}
-            sector_tags={item?.sector_tags}
-          />
-        ))
-      ) : (
-        <EmptySection />
-      )}
+      <SectionHeading icon={FileText}>Regulatory Updates</SectionHeading>
+      <CappedItems items={s?.regulatory_updates} />
 
       {/* Recent Judgements */}
-      <SectionHeading>Recent Judgements</SectionHeading>
-      {s?.judgements?.length > 0 ? (
-        s.judgements.map((item, i) => (
-          <SectionCard
-            key={i}
-            headline={item?.headline}
-            summary={item?.summary}
-            action={item?.action}
-            source={item?.source}
-            url={item?.original_url}
-            sector_tags={item?.sector_tags}
-          />
-        ))
-      ) : (
-        <EmptySection />
-      )}
+      <SectionHeading icon={ShieldCheck}>Recent Judgements</SectionHeading>
+      <CappedItems items={s?.judgements} />
 
       {/* Under Review */}
-      <SectionHeading>Under Review</SectionHeading>
-      {s?.under_review?.length > 0 ? (
-        s.under_review.map((item, i) => (
-          <SectionCard
-            key={i}
-            headline={item?.headline}
-            summary={item?.summary}
-            action={item?.action}
-            source={item?.source}
-            url={item?.original_url}
-            sector_tags={item?.sector_tags}
-          />
-        ))
-      ) : (
-        <EmptySection />
-      )}
+      <SectionHeading icon={Search}>Under Review</SectionHeading>
+      <CappedItems items={s?.under_review} />
 
       {/* Evergreen Tip */}
-      <SectionHeading>Compliance Tip of the Week</SectionHeading>
+      <SectionHeading icon={Lightbulb}>Compliance Tip of the Week</SectionHeading>
       {s?.evergreen_tip ? (
-        <div
-          className="p-4 mb-4"
-          style={{ background: 'white', border: '1px solid #E5E7EB', borderRadius: '8px' }}
-        >
+        <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 mb-4">
           <h3
-            className="font-bold mb-2"
-            style={{ fontSize: '15px', color: '#1F2937', fontFamily: 'Montserrat, sans-serif' }}
+            className="font-bold text-gray-800 mb-2"
+            style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '15px' }}
           >
             {s.evergreen_tip.tip}
           </h3>
-          <p style={{ fontSize: '13px', color: '#4B5563', fontFamily: 'Open Sans, sans-serif' }}>
+          <p className="text-base text-gray-600" style={{ fontFamily: 'Open Sans, sans-serif', fontSize: '14px' }}>
             {s.evergreen_tip.body}
           </p>
         </div>
@@ -116,19 +93,16 @@ export default function IssuePreview({ issueData }) {
       )}
 
       {/* Sector Spotlight */}
-      <SectionHeading>Sector Spotlight</SectionHeading>
+      <SectionHeading icon={TrendingUp}>Sector Spotlight</SectionHeading>
       {s?.sector_spotlight ? (
-        <div
-          className="p-4 mb-4"
-          style={{ background: 'white', border: '1px solid #E5E7EB', borderRadius: '8px' }}
-        >
+        <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 mb-4">
           <h3
-            className="font-bold mb-2"
-            style={{ fontSize: '15px', color: '#1F2937', fontFamily: 'Montserrat, sans-serif' }}
+            className="font-bold text-gray-800 mb-2"
+            style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '15px' }}
           >
             {s.sector_spotlight.headline || `${s.sector_spotlight.sector} Update`}
           </h3>
-          <p style={{ fontSize: '13px', color: '#4B5563', fontFamily: 'Open Sans, sans-serif' }}>
+          <p className="text-base text-gray-600" style={{ fontFamily: 'Open Sans, sans-serif', fontSize: '14px' }}>
             {s.sector_spotlight.body}
           </p>
         </div>
@@ -137,41 +111,27 @@ export default function IssuePreview({ issueData }) {
       )}
 
       {/* Checkedit Check of the Month */}
-      <SectionHeading>Checkedit Check of the Month</SectionHeading>
+      <SectionHeading icon={ShieldCheck}>Checkedit Check of the Month</SectionHeading>
       {s?.checkedit_check ? (
-        <div
-          className="p-4 mb-4"
-          style={{ background: 'white', border: '1px solid #E5E7EB', borderRadius: '8px' }}
-        >
+        <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 mb-4">
           <div className="mb-2">
-            <span
-              className="inline-block px-2 py-0.5 rounded-full mr-2"
-              style={{ background: '#F3F4F5', color: '#6B7280', fontSize: '11px' }}
-            >
+            <span className="bg-gray-100 text-gray-500 text-xs rounded-full px-2 py-0.5">
               {s.checkedit_check.brand}
             </span>
           </div>
           <h3
-            className="font-bold mb-1"
-            style={{ fontSize: '15px', color: '#1F2937', fontFamily: 'Montserrat, sans-serif' }}
+            className="font-bold text-gray-800 mb-1"
+            style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '15px' }}
           >
             {s.checkedit_check.product}
           </h3>
-          <p className="mb-2" style={{ fontSize: '13px', color: '#4B5563', fontFamily: 'Open Sans, sans-serif' }}>
+          <p className="text-base text-gray-600 mb-2" style={{ fontFamily: 'Open Sans, sans-serif', fontSize: '14px' }}>
             {s.checkedit_check.finding}
           </p>
-          <div
-            className="mb-2"
-            style={{
-              borderLeft: '3px solid #3B82F6',
-              paddingLeft: '10px',
-              fontSize: '13px',
-              color: '#374151'
-            }}
-          >
+          <div className="border-l-4 border-blue-500 pl-3 mb-2 text-sm text-gray-700" style={{ fontFamily: 'Open Sans, sans-serif' }}>
             <strong>Verdict:</strong> {s.checkedit_check.verdict}
           </div>
-          <p className="italic" style={{ fontSize: '12px', color: '#6B7280' }}>
+          <p className="italic text-sm text-gray-500" style={{ fontFamily: 'Open Sans, sans-serif' }}>
             {s.checkedit_check.checkedit_note}
           </p>
         </div>
