@@ -31,9 +31,29 @@ app.post('/api/generate', async (_req, res) => {
       scrapeABAC()
     ])
 
-    const items = results.flatMap(r => r.status === 'fulfilled' ? r.value : [])
+    const rawItems = results.flatMap(r => r.status === 'fulfilled' ? r.value : [])
 
-    console.log(`Scraped ${items.length} items total`)
+    // Interleave by source so no single source dominates early batches
+    const bySource = {}
+    for (const item of rawItems) {
+      const key = item.source || 'unknown'
+      if (!bySource[key]) bySource[key] = []
+      bySource[key].push(item)
+    }
+    const queues = Object.values(bySource)
+    const items = []
+    let added = true
+    while (added) {
+      added = false
+      for (const q of queues) {
+        if (q.length) {
+          items.push(q.shift())
+          added = true
+        }
+      }
+    }
+
+    console.log(`Scraped ${items.length} items total (interleaved across ${queues.length} sources)`)
 
     const { results: summarised, apiCalls: summariserCalls, capped: summariserCapped } = await summariseItems(items)
     const issue = await buildIssue(summarised, summariserCalls, summariserCapped)
