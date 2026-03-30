@@ -1,42 +1,50 @@
 import fetch from 'node-fetch'
-import * as cheerio from 'cheerio'
+
+const NAV_PATTERNS = /^(home|about|contact|read more|the code|menu|search|login|sign|privacy|terms|faq)/i
 
 export default async function scrapeASIC() {
   try {
+    // ASIC's listing page is JS-rendered. Fetch the JSON API directly.
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 10000)
 
-    const res = await fetch('https://asic.gov.au/about-asic/news-centre/find-a-media-release/', {
+    const res = await fetch('https://download.asic.gov.au/scripts/newsroom/newsroom-all.json', {
       signal: controller.signal,
       headers: { 'User-Agent': 'PolicyPulse/1.0' }
     })
     clearTimeout(timeout)
 
-    const html = await res.text()
-    const $ = cheerio.load(html)
+    const data = await res.json()
     const items = []
 
-    $('article, .views-row, .media-release, .listing-item, li.search-result, table tbody tr').each((i, el) => {
-      if (i >= 10) return false
-      const $el = $(el)
-      const title = $el.find('h2 a, h3 a, a').first().text()?.trim() ||
-                    $el.find('h2, h3, .title').first().text()?.trim()
-      const href = $el.find('a').first().attr('href')
-      const date = $el.find('.date, time, .media-release-date').first().text()?.trim() || ''
-      const bodyText = $el.find('p, .summary').first().text()?.trim() ||
-                       $el.text()?.replace(/\s+/g, ' ')?.trim() || ''
+    // Each item: { name, documentNumber, publishedDate, url, metaDescription, metaType, metaSubject }
+    // Filter to media releases only, take first 10
+    const releases = (Array.isArray(data) ? data : [])
+      .filter(item => item?.metaType?.toLowerCase()?.includes('media release'))
+      .slice(0, 10)
 
-      if (title && title.length > 3) {
-        items.push({
-          title,
-          date,
-          url: href?.startsWith('http') ? href : href ? `https://asic.gov.au${href}` : 'https://asic.gov.au/about-asic/news-centre/find-a-media-release/',
-          body_text: bodyText.slice(0, 800),
-          source: 'ASIC'
-        })
-      }
-    })
+    for (const item of releases) {
+      const title = item?.name?.trim() || ''
+      const date = item?.publishedDate
+        ? new Date(item.publishedDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
+        : ''
+      const url = item?.url
+        ? (item.url.startsWith('http') ? item.url : `https://asic.gov.au${item.url}`)
+        : 'https://asic.gov.au/about-asic/news-centre/find-a-media-release/'
+      const bodyText = item?.metaDescription?.trim() || ''
 
+      if (!title || title.length < 15 || NAV_PATTERNS.test(title) || !date) continue
+
+      items.push({
+        title,
+        date,
+        url,
+        body_text: bodyText.slice(0, 800),
+        source: 'ASIC'
+      })
+    }
+
+    console.log(`[scraper:asic] Found ${items.length} items`)
     return items
   } catch (err) {
     console.error('ASIC scraper error:', err.message)
