@@ -1,12 +1,17 @@
 import Anthropic from '@anthropic-ai/sdk'
 
-const client = new Anthropic()
+let client = null
+function getClient() {
+  if (!client) client = new Anthropic()
+  return client
+}
 
 const SYSTEM_PROMPT = `You are a compliance intelligence editor for PolicyPulse by Checkedit — an Australian advertising compliance newsletter. Classify and summarise regulatory content in plain English for marketing managers. Always respond with valid JSON only. No preamble, no markdown.`
 
 const API_CALL_LIMIT = 10
 
 export async function summariseItems(items) {
+  console.log(`[summariser] Received ${items?.length || 0} items to summarise`)
   if (!items || items.length === 0) return { results: [], apiCalls: 0, capped: false }
 
   const batches = []
@@ -38,6 +43,7 @@ export async function summariseItems(items) {
 
     try {
       callCounter.count++
+      console.log(`[summariser] Batch ${callCounter.count}: ${batch.length} items`)
       const userPrompt = `Classify and summarise each item. Return a JSON array, one object per input item, same order.
 
 Each object:
@@ -59,7 +65,7 @@ ${JSON.stringify(batch.map(item => ({
   source: item?.source || ''
 })), null, 2)}`
 
-      const response = await client.messages.create({
+      const response = await getClient().messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1500,
         system: SYSTEM_PROMPT,
@@ -67,6 +73,7 @@ ${JSON.stringify(batch.map(item => ({
       })
 
       const text = response?.content?.[0]?.text || '[]'
+      console.log(`[summariser] Batch ${callCounter.count} API response received (${text.length} chars)`)
       const parsed = JSON.parse(text)
 
       if (Array.isArray(parsed)) {

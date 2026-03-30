@@ -1,6 +1,10 @@
 import Anthropic from '@anthropic-ai/sdk'
 
-const client = new Anthropic()
+let client = null
+function getClient() {
+  if (!client) client = new Anthropic()
+  return client
+}
 
 const TIPS = [
   {
@@ -71,7 +75,7 @@ async function generateSectorSpotlight(items, totalCalls) {
     .find(([s]) => s !== 'general')?.[0] || 'general'
 
   try {
-    const response = await client.messages.create({
+    const response = await getClient().messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 500,
       system: 'You are a compliance intelligence editor. Always respond with valid JSON only. No preamble, no markdown.',
