@@ -102,9 +102,22 @@ export default function IssuePreview({ issueData }) {
           >
             {s.sector_spotlight.headline || `${s.sector_spotlight.sector} Update`}
           </h3>
-          <p className="text-base text-gray-600" style={{ fontFamily: 'Open Sans, sans-serif', fontSize: '14px' }}>
-            {s.sector_spotlight.body}
-          </p>
+          {(() => {
+            const body = s.sector_spotlight.body || ''
+            const words = body.split(/\s+/)
+            const truncated = words.length > 100
+            const text = truncated ? words.slice(0, 100).join(' ') : body
+            const sentences = text.split('. ').filter(Boolean)
+            const chunks = []
+            for (let i = 0; i < sentences.length; i += 3) {
+              chunks.push(sentences.slice(i, i + 3).join('. '))
+            }
+            return chunks.map((chunk, i) => (
+              <p key={i} className="text-base text-gray-600 mb-2" style={{ fontFamily: 'Open Sans, sans-serif', fontSize: '14px' }}>
+                {chunk}{i < chunks.length - 1 || chunk.endsWith('.') ? '' : '.'}{i === chunks.length - 1 && truncated ? '...' : ''}
+              </p>
+            ))
+          })()}
         </div>
       ) : (
         <EmptySection />
