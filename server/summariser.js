@@ -4,8 +4,10 @@ const client = new Anthropic()
 
 const SYSTEM_PROMPT = `You are a compliance intelligence editor for PolicyPulse by Checkedit — an Australian advertising compliance newsletter. Classify and summarise regulatory content in plain English for marketing managers. Always respond with valid JSON only. No preamble, no markdown.`
 
+const API_CALL_LIMIT = 10
+
 export async function summariseItems(items) {
-  if (!items || items.length === 0) return []
+  if (!items || items.length === 0) return { results: [], apiCalls: 0, capped: false }
 
   const batches = []
   for (let i = 0; i < items.length; i += 5) {
@@ -13,9 +15,29 @@ export async function summariseItems(items) {
   }
 
   const results = []
+  const callCounter = { count: 0 }
+  let capped = false
 
   for (const batch of batches) {
+    if (callCounter.count >= API_CALL_LIMIT) {
+      console.warn(`⚠️  Summariser hit API call cap (${API_CALL_LIMIT}). Returning partial results with fallback summaries.`)
+      capped = true
+      for (const item of batch) {
+        results.push({
+          original_url: item?.url || '',
+          section: 'regulatory_update',
+          headline: item?.title?.slice(0, 60) || 'Item summary unavailable',
+          summary: 'Summary unavailable — API call limit reached. View source for details.',
+          action: 'Review the source directly for full details.',
+          sector_tags: ['general'],
+          source: item?.source || ''
+        })
+      }
+      continue
+    }
+
     try {
+      callCounter.count++
       const userPrompt = `Classify and summarise each item. Return a JSON array, one object per input item, same order.
 
 Each object:
@@ -71,5 +93,5 @@ ${JSON.stringify(batch.map(item => ({
     }
   }
 
-  return results
+  return { results, apiCalls: callCounter.count, capped }
 }

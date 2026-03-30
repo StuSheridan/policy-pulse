@@ -35,8 +35,10 @@ app.post('/api/generate', async (_req, res) => {
 
     console.log(`Scraped ${items.length} items total`)
 
-    const summarised = await summariseItems(items)
-    const issue = await buildIssue(summarised)
+    const { results: summarised, apiCalls: summariserCalls, capped: summariserCapped } = await summariseItems(items)
+    const issue = await buildIssue(summarised, summariserCalls, summariserCapped)
+
+    console.log(`Pipeline complete: ${issue.meta.total_api_calls} API calls, capped=${issue.meta.capped}, ${issue.meta.scraped_item_count} items`)
 
     res.json(issue)
   } catch (err) {

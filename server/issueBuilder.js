@@ -40,7 +40,25 @@ function getCurrentWeekNumber() {
   return Math.ceil((diff / 86400000 + start.getDay() + 1) / 7)
 }
 
-async function generateSectorSpotlight(items) {
+const TOTAL_CALL_LIMIT = 15
+
+async function generateSectorSpotlight(items, totalCalls) {
+  if (totalCalls >= TOTAL_CALL_LIMIT) {
+    console.warn(`⚠️  Issue builder skipping sector spotlight — total API calls at cap (${TOTAL_CALL_LIMIT}).`)
+    const sectorCounts = {}
+    for (const item of items) {
+      for (const tag of item?.sector_tags || []) {
+        sectorCounts[tag] = (sectorCounts[tag] || 0) + 1
+      }
+    }
+    const topSector = Object.entries(sectorCounts)
+      .sort((a, b) => b[1] - a[1])
+      .find(([s]) => s !== 'general')?.[0] || 'general'
+    return {
+      result: { sector: topSector, headline: `${topSector} sector update`, body: 'Sector spotlight unavailable this week — API call limit reached. Check back next issue.' },
+      apiCalls: 0
+    }
+  }
   const sectorCounts = {}
   for (const item of items) {
     for (const tag of item?.sector_tags || []) {
@@ -64,36 +82,44 @@ async function generateSectorSpotlight(items) {
     })
 
     const text = response?.content?.[0]?.text || '{}'
-    return JSON.parse(text)
+    return { result: JSON.parse(text), apiCalls: 1 }
   } catch (err) {
     console.error('Sector spotlight error:', err.message)
     return {
-      sector: topSector,
-      headline: `${topSector} sector update`,
-      body: 'Sector spotlight unavailable this week — check back next issue.'
+      result: { sector: topSector, headline: `${topSector} sector update`, body: 'Sector spotlight unavailable this week — check back next issue.' },
+      apiCalls: 1
     }
   }
 }
 
-export async function buildIssue(summarisedItems) {
+export async function buildIssue(summarisedItems, summariserApiCalls = 0, summariserCapped = false) {
   const weekNumber = getCurrentWeekNumber()
+  let totalCalls = summariserApiCalls
 
   const regulatory_updates = summarisedItems.filter(i => i?.section === 'regulatory_update')
   const judgements = summarisedItems.filter(i => i?.section === 'judgement')
   const under_review = summarisedItems.filter(i => i?.section === 'under_review')
 
   const evergreen_tip = TIPS[weekNumber % 5]
-  const sector_spotlight = await generateSectorSpotlight(summarisedItems)
+  const spotlightResult = await generateSectorSpotlight(summarisedItems, totalCalls)
+  totalCalls += spotlightResult.apiCalls
+
+  const capped = summariserCapped || totalCalls >= TOTAL_CALL_LIMIT
 
   return {
     generated_at: new Date().toISOString(),
     week_number: weekNumber,
+    meta: {
+      total_api_calls: totalCalls,
+      capped,
+      scraped_item_count: summarisedItems.length
+    },
     sections: {
       regulatory_updates,
       judgements,
       under_review,
       evergreen_tip,
-      sector_spotlight,
+      sector_spotlight: spotlightResult.result,
       checkedit_check: CHECKEDIT_CHECK
     }
   }

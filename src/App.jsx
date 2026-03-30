@@ -90,6 +90,15 @@ export default function App() {
           </div>
         )}
 
+        {issueData?.meta?.capped && (
+          <div
+            className="mx-auto mb-4 p-3 rounded-lg text-center"
+            style={{ maxWidth: '680px', background: '#DBEAFE', color: '#1E40AF', borderRadius: '8px', fontSize: '13px' }}
+          >
+            Some content was capped to protect API usage. All available content is shown below.
+          </div>
+        )}
+
         {issueData && <IssuePreview issueData={issueData} />}
       </div>
     </div>
